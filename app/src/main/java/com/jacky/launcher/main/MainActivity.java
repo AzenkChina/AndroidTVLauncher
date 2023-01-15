@@ -4,32 +4,23 @@ package com.jacky.launcher.main;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v17.leanback.app.BackgroundManager;
 import android.support.v17.leanback.app.BrowseFragment;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.HeaderItem;
-import android.support.v17.leanback.widget.ImageCardView;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
 import android.support.v17.leanback.widget.OnItemViewClickedListener;
-import android.support.v17.leanback.widget.OnItemViewSelectedListener;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
-import android.support.v4.app.ActivityOptionsCompat;
 import android.util.DisplayMetrics;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.animation.GlideAnimation;
-import com.bumptech.glide.request.target.SimpleTarget;
 import com.jacky.launcher.R;
 import com.jacky.launcher.app.AppCardPresenter;
 import com.jacky.launcher.app.AppDataManage;
 import com.jacky.launcher.app.AppModel;
-import com.jacky.launcher.detail.MediaDetailsActivity;
-import com.jacky.launcher.detail.MediaModel;
 import com.jacky.launcher.function.FunctionCardPresenter;
 import com.jacky.launcher.function.FunctionModel;
 
@@ -43,6 +34,7 @@ public class MainActivity extends Activity {
     private BackgroundManager mBackgroundManager;
     private DisplayMetrics mMetrics;
     private Context mContext;
+    private static final int COW_COUNT = 5;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +45,6 @@ public class MainActivity extends Activity {
         mBrowseFragment = (BrowseFragment) getFragmentManager().findFragmentById(R.id.browse_fragment);
 
         mBrowseFragment.setHeadersState(BrowseFragment.HEADERS_DISABLED);
-        mBrowseFragment.setTitle(getString(R.string.app_name));
 
         prepareBackgroundManager();
         buildRowsAdapter();
@@ -69,8 +60,6 @@ public class MainActivity extends Activity {
     private void buildRowsAdapter() {
         rowsAdapter = new ArrayObjectAdapter(new ListRowPresenter());
 
-        addPhotoRow();
-        addVideoRow();
         addAppRow();
         addFunctionRow();
 
@@ -78,17 +67,7 @@ public class MainActivity extends Activity {
         mBrowseFragment.setOnItemViewClickedListener(new OnItemViewClickedListener() {
             @Override
             public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item, RowPresenter.ViewHolder rowViewHolder, Row row) {
-                if (item instanceof MediaModel) {
-                    MediaModel mediaModel = (MediaModel) item;
-                    Intent intent = new Intent(mContext, MediaDetailsActivity.class);
-                    intent.putExtra(MediaDetailsActivity.MEDIA, mediaModel);
-
-                    Bundle bundle = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                            (Activity) mContext,
-                            ((ImageCardView) itemViewHolder.view).getMainImageView(),
-                            MediaDetailsActivity.SHARED_ELEMENT_NAME).toBundle();
-                    startActivity(intent, bundle);
-                } else if (item instanceof AppModel) {
+                if (item instanceof AppModel) {
                     AppModel appBean = (AppModel) item;
                     Intent launchIntent = mContext.getPackageManager().getLaunchIntentForPackage(
                             appBean.getPackageName());
@@ -104,65 +83,28 @@ public class MainActivity extends Activity {
                 }
             }
         });
-        mBrowseFragment.setOnItemViewSelectedListener(new OnItemViewSelectedListener() {
-            @Override
-            public void onItemSelected(Presenter.ViewHolder itemViewHolder, Object item, RowPresenter.ViewHolder rowViewHolder, Row row) {
-                if (item instanceof MediaModel) {
-
-                    MediaModel mediaModel = (MediaModel) item;
-                    int width = mMetrics.widthPixels;
-                    int height = mMetrics.heightPixels;
-
-                    Glide.with(mContext)
-                            .load(mediaModel.getImageUrl())
-                            .asBitmap()
-                            .centerCrop()
-                            .into(new SimpleTarget<Bitmap>(width, height) {
-                                @Override
-                                public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
-                                    mBackgroundManager.setBitmap(resource);
-                                }
-                            });
-                } else {
-                    mBackgroundManager.setBitmap(null);
-                }
-            }
-        });
-    }
-
-    private void addPhotoRow() {
-        String headerName = getResources().getString(R.string.app_header_photo_name);
-        ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(new ImgCardPresenter());
-
-        for (MediaModel mediaModel : MediaModel.getPhotoModels()) {
-            listRowAdapter.add(mediaModel);
-        }
-        HeaderItem header = new HeaderItem(0, headerName);
-        rowsAdapter.add(new ListRow(header, listRowAdapter));
-    }
-
-    private void addVideoRow() {
-        String headerName = getResources().getString(R.string.app_header_video_name);
-        ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(new ImgCardPresenter());
-        for (MediaModel mediaModel : MediaModel.getVideoModels()) {
-            listRowAdapter.add(mediaModel);
-        }
-        HeaderItem header = new HeaderItem(0, headerName);
-        rowsAdapter.add(new ListRow(header, listRowAdapter));
     }
 
     private void addAppRow() {
         String headerName = getResources().getString(R.string.app_header_app_name);
-        ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(new AppCardPresenter());
-
         ArrayList<AppModel> appDataList = new AppDataManage(mContext).getLaunchAppList();
         int cardCount = appDataList.size();
+        boolean haveHeader = false;
 
-        for (int i = 0; i < cardCount; i++) {
-            listRowAdapter.add(appDataList.get(i));
+        for (int r = 0; r < ((cardCount+COW_COUNT-1)/COW_COUNT); r++) {
+            ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(new AppCardPresenter());
+            for (int c = (r*COW_COUNT); ((c < cardCount) && (c < (r*COW_COUNT+COW_COUNT))); c++) {
+                listRowAdapter.add(appDataList.get(c));
+            }
+            if(!haveHeader) {
+                HeaderItem header = new HeaderItem(0, headerName);
+                rowsAdapter.add(new ListRow(header, listRowAdapter));
+                haveHeader = true;
+            }
+            else {
+                rowsAdapter.add(new ListRow(listRowAdapter));
+            }
         }
-        HeaderItem header = new HeaderItem(0, headerName);
-        rowsAdapter.add(new ListRow(header, listRowAdapter));
     }
 
     private void addFunctionRow() {

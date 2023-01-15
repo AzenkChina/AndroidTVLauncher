@@ -10,15 +10,15 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_marginLeft="200dp"
-        android:layout_marginRight="200dp"
-        android:layout_marginTop="200dp"/>
+        android:layout_marginLeft="100dp"
+        android:layout_marginRight="100dp"
+        android:layout_marginTop="60dp"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@id/app_uninstall_lv"
-        android:layout_marginTop="120dp"
+        android:layout_marginTop="5dp"
         android:text="应用卸载"
         android:textColor="@color/white"
         android:textSize="40sp"/>

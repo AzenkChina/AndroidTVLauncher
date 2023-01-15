@@ -51,8 +51,15 @@ public class AppDataManage {
             } catch (NameNotFoundException e) {
                 e.printStackTrace();
             }
-            if (!localAppBean.getPackageName().equals("com.jacky.launcher")) {
-                localArrayList.add(localAppBean);
+            if ((!localAppBean.getPackageName().equals("com.jacky.launcher")) &&
+                    (!localAppBean.getPackageName().equals("com.mbx.settingsmbox")) &&
+                    (!localAppBean.getPackageName().equals("com.rockchip.wfd")) &&
+                    (!localAppBean.getPackageName().equals("android.rockchip.update.service")) &&
+                    (!localAppBean.getPackageName().equals("com.android.documentsui")) &&
+                    (!localAppBean.getPackageName().equals("com.rockchips.dlna")) &&
+                    (!localAppBean.getPackageName().equals("com.droidlogic.FileBrower")) &&
+                    (!localAppBean.getPackageName().equals("com.rockchips.mediacenter"))) {
+                localArrayList.add(0, localAppBean);
             }
         }
         return localArrayList;
