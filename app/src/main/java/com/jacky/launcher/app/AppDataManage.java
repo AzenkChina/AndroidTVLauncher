@@ -3,6 +3,7 @@ package com.jacky.launcher.app;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -15,6 +16,24 @@ import java.util.List;
 public class AppDataManage {
 
     private final Context mContext;
+
+    private boolean isHidenApp(String appName) {
+        if(appName == null) {
+            return(true);
+        }
+
+        if ((appName.equals("com.jacky.launcher")) ||
+                (appName.equals("com.mbx.settingsmbox")) ||
+                (appName.equals("com.rockchip.wfd")) ||
+                (appName.equals("android.rockchip.update.service")) ||
+                (appName.equals("com.android.documentsui")) ||
+                (appName.equals("com.rockchips.dlna")) ||
+                (appName.equals("com.droidlogic.FileBrower")) ||
+                (appName.equals("com.rockchips.mediacenter"))) {
+            return(true);
+        }
+        return(false);
+    }
 
     public AppDataManage(Context context) {
         mContext = context;
@@ -31,9 +50,7 @@ public class AppDataManage {
         if (localList.size() != 0) {
             localIterator = localList.iterator();
         }
-        while (true) {
-            if (!localIterator.hasNext())
-                break;
+        while (localIterator.hasNext()) {
             ResolveInfo localResolveInfo = (ResolveInfo) localIterator.next();
             AppModel localAppBean = new AppModel();
             localAppBean.setIcon(localResolveInfo.activityInfo.loadIcon(localPackageManager));
@@ -45,94 +62,56 @@ public class AppDataManage {
             PackageInfo mPackageInfo;
             try {
                 mPackageInfo = mContext.getPackageManager().getPackageInfo(pkgName, 0);
-                if ((mPackageInfo.applicationInfo.flags & mPackageInfo.applicationInfo.FLAG_SYSTEM) > 0) {// 系统预装
+                if ((mPackageInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) > 0) {// 系统预装
                     localAppBean.setSysApp(true);
+                }
+                if ((mPackageInfo.applicationInfo.flags & ApplicationInfo.FLAG_IS_GAME) > 0) {// 游戏
+                    continue;
                 }
             } catch (NameNotFoundException e) {
                 e.printStackTrace();
             }
-            if ((!localAppBean.getPackageName().equals("com.jacky.launcher")) &&
-                    (!localAppBean.getPackageName().equals("com.mbx.settingsmbox")) &&
-                    (!localAppBean.getPackageName().equals("com.rockchip.wfd")) &&
-                    (!localAppBean.getPackageName().equals("android.rockchip.update.service")) &&
-                    (!localAppBean.getPackageName().equals("com.android.documentsui")) &&
-                    (!localAppBean.getPackageName().equals("com.rockchips.dlna")) &&
-                    (!localAppBean.getPackageName().equals("com.droidlogic.FileBrower")) &&
-                    (!localAppBean.getPackageName().equals("com.rockchips.mediacenter"))) {
-                localArrayList.add(0, localAppBean);
+            if (isHidenApp(localAppBean.getPackageName())) {
+                continue;
             }
+            localArrayList.add(0, localAppBean);
         }
         return localArrayList;
     }
 
-    public ArrayList<AppModel> getUninstallAppList() {
+    public ArrayList<AppModel> getLaunchGameList() {
         PackageManager localPackageManager = mContext.getPackageManager();
         Intent localIntent = new Intent("android.intent.action.MAIN");
         localIntent.addCategory("android.intent.category.LAUNCHER");
         List<ResolveInfo> localList = localPackageManager.queryIntentActivities(localIntent, 0);
         ArrayList<AppModel> localArrayList = null;
         Iterator<ResolveInfo> localIterator = null;
-        if (localList != null) {
-            localArrayList = new ArrayList<>();
+        localArrayList = new ArrayList<>();
+        if (localList.size() != 0) {
             localIterator = localList.iterator();
         }
-        while (true) {
-            if (!localIterator.hasNext())
-                break;
+        while (localIterator.hasNext()) {
             ResolveInfo localResolveInfo = (ResolveInfo) localIterator.next();
             AppModel localAppBean = new AppModel();
             localAppBean.setIcon(localResolveInfo.activityInfo.loadIcon(localPackageManager));
             localAppBean.setName(localResolveInfo.activityInfo.loadLabel(localPackageManager).toString());
             localAppBean.setPackageName(localResolveInfo.activityInfo.packageName);
             localAppBean.setDataDir(localResolveInfo.activityInfo.applicationInfo.publicSourceDir);
+            localAppBean.setLauncherName(localResolveInfo.activityInfo.name);
             String pkgName = localResolveInfo.activityInfo.packageName;
             PackageInfo mPackageInfo;
             try {
                 mPackageInfo = mContext.getPackageManager().getPackageInfo(pkgName, 0);
-                if ((mPackageInfo.applicationInfo.flags & mPackageInfo.applicationInfo.FLAG_SYSTEM) > 0) {// 系统预装
-                    localAppBean.setSysApp(true);
-                } else {
-                    localArrayList.add(localAppBean);
+                if ((mPackageInfo.applicationInfo.flags & ApplicationInfo.FLAG_IS_GAME) == 0) {// 游戏
+                    continue;
                 }
             } catch (NameNotFoundException e) {
                 e.printStackTrace();
             }
-        }
-        return localArrayList;
-    }
-
-    public ArrayList<AppModel> getAutoRunAppList() {
-        PackageManager localPackageManager = mContext.getPackageManager();
-        Intent localIntent = new Intent("android.intent.action.MAIN");
-        localIntent.addCategory("android.intent.category.LAUNCHER");
-        List<ResolveInfo> localList = localPackageManager.queryIntentActivities(localIntent, 0);
-        ArrayList<AppModel> localArrayList = null;
-        Iterator<ResolveInfo> localIterator = null;
-        if (localList != null) {
-            localArrayList = new ArrayList<>();
-            localIterator = localList.iterator();
-        }
-
-        while (true) {
-            if (!localIterator.hasNext())
-                break;
-            ResolveInfo localResolveInfo = localIterator.next();
-            AppModel localAppBean = new AppModel();
-            localAppBean.setIcon(localResolveInfo.activityInfo.loadIcon(localPackageManager));
-            localAppBean.setName(localResolveInfo.activityInfo.loadLabel(localPackageManager).toString());
-            localAppBean.setPackageName(localResolveInfo.activityInfo.packageName);
-            localAppBean.setDataDir(localResolveInfo.activityInfo.applicationInfo.publicSourceDir);
-            String pkgName = localResolveInfo.activityInfo.packageName;
-            String permission = "android.permission.RECEIVE_BOOT_COMPLETED";
-            try {
-                PackageInfo mPackageInfo = mContext.getPackageManager().getPackageInfo(pkgName, 0);
-                if ((PackageManager.PERMISSION_GRANTED == localPackageManager.checkPermission(permission, pkgName))
-                        && !((mPackageInfo.applicationInfo.flags & mPackageInfo.applicationInfo.FLAG_SYSTEM) > 0)) {
-                    localArrayList.add(localAppBean);
-                }
-            } catch (NameNotFoundException e) {
-                e.printStackTrace();
+            if (isHidenApp(localAppBean.getPackageName())) {
+                continue;
             }
+            localArrayList.add(0, localAppBean);
         }
         return localArrayList;
     }

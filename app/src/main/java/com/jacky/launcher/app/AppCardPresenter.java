@@ -19,14 +19,11 @@ import com.jacky.launcher.R;
 public class AppCardPresenter extends Presenter {
 
     private Context mContext;
-    private int CARD_WIDTH = 313;
-    private int CARD_HEIGHT = 176;
-    private Drawable mDefaultCardImage;
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent) {
         mContext = parent.getContext();
-        mDefaultCardImage = mContext.getResources().getDrawable(R.drawable.pic_default);
+        Drawable mDefaultCardImage = mContext.getResources().getDrawable(R.drawable.pic_default);
         ImageCardView cardView = new ImageCardView(mContext) {
             @Override
             public void setSelected(boolean selected) {
@@ -45,7 +42,9 @@ public class AppCardPresenter extends Presenter {
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, Object item) {
         ImageCardView cardView = (ImageCardView) viewHolder.view;
-        cardView.setMainImageDimensions(CARD_WIDTH,CARD_HEIGHT);
+        int CARD_WIDTH = 313;
+        int CARD_HEIGHT = 176;
+        cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
         AppModel appBean = (AppModel) item;
         cardView.setMainImageScaleType(ImageView.ScaleType.CENTER_INSIDE);
         cardView.getMainImageView().setImageDrawable(appBean.getIcon());
